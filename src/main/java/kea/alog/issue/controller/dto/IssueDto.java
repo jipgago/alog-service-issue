@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 public class IssueDto {
     @Getter
     @NoArgsConstructor
@@ -94,6 +96,18 @@ public class IssueDto {
             this.issuePk = issuePk;
             this.pjPk = pjPk;
             this.teamPk = teamPk;
+        }
+    }
+    @Getter
+    @NoArgsConstructor
+    public static class PageIssueListDto{
+        List<IssueResponseDto> issueList;
+        Long totalPage;
+
+        @Builder
+        public PageIssueListDto(List<IssueResponseDto> issueList, Long totalPage){
+            this.issueList = issueList;
+            this.totalPage = totalPage;
         }
     }
 }
