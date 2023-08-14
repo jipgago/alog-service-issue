@@ -9,10 +9,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -111,7 +116,7 @@ public class IssueService {
     }
     /**
      * 
-     * @param issueId
+     * @param pjPk
      * @return
      */
     @Transactional
@@ -165,13 +170,17 @@ public class IssueService {
     }
 
     /**
-     * @Todo 페이징 추가할 것 
+     * 이슈리스트 페이지화
      * @param userPk
+     * @param currentPage
      * @return
      */
     @Transactional
-    public List<IssueResponseDto> getPageUserIssueList(Long userPk) {
-        List<Issue> allList = issueRepository.findAllByIssueAssigneePk(userPk);
+    public PageIssueListDto getPageUserIssueList(Long userPk, Long currentPage) {
+        int pageSize = 10;
+        Pageable pageable = PageRequest.of(currentPage.intValue() - 1, pageSize, Sort.by("issuePk").descending());
+        Page<Issue> pageList = issueRepository.findAllByIssueAssigneePkOrderByIssuePkDesc(userPk, pageable);
+        List<Issue> allList = pageList.getContent();
         List<IssueResponseDto> rspDto = new ArrayList<>();
         for(Issue idx : allList){
             IssueResponseDto addList = IssueResponseDto.builder()
@@ -191,7 +200,12 @@ public class IssueService {
                     .build();
             rspDto.add(addList);
         }
-        return rspDto;
+        Long totalPage = pageList.getTotalElements();
+        PageIssueListDto pageIssueListDto = PageIssueListDto.builder()
+                .issueList(rspDto)
+                .totalPage(totalPage)
+                .build();
+        return pageIssueListDto;
     }
     /**
      * Todo : 프로젝트별 리스트, 해결할 이슈 AssigneePk의 전체 리스트와 페이징을 한 리스트

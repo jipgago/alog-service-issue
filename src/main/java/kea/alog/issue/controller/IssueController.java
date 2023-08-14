@@ -1,12 +1,17 @@
 package kea.alog.issue.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import kea.alog.issue.config.Result;
 import kea.alog.issue.controller.dto.IssueDto.*;
+import kea.alog.issue.controller.dto.TokenPayloadDto;
 import kea.alog.issue.service.IssueService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.el.parser.Token;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -54,7 +59,7 @@ public class IssueController {
     }
 
     @GetMapping("/get")
-    public ResponseEntity<Result> readIssue(@RequestBody IssueKeyDto issueKeyDto){
+    public ResponseEntity<Result> getIssue(@RequestBody IssueKeyDto issueKeyDto){
         IssueResponseDto rspDto = issueService.getOneIssue(issueKeyDto.getIssuePk(), issueKeyDto.getPjPk(), issueKeyDto.getTeamPk());
         if(rspDto.getIssuePk() != null){
             Result result = Result.builder()
@@ -107,5 +112,25 @@ public class IssueController {
                 .build();
             return ResponseEntity.badRequest().body(result);
         }
+    }
+    @GetMapping("/getUserIssue")
+    public ResponseEntity<Result> getUserIssue(HttpServletRequest request){
+        TokenPayloadDto userInfo = (TokenPayloadDto) request.getAttribute("user");
+        List<IssueResponseDto> issueList = issueService.getAllUserIssueList(userInfo.getUserPk());
+        Result result = Result.builder().isSuccess(true)
+                .data(issueList)
+                .message("Loaded IssueList")
+                .build();
+        return ResponseEntity.ok().body(result);
+    }
+    @GetMapping("/getUserIssueList/{currnetPage}")
+    public ResponseEntity<Result> getUserIssuePage(HttpServletRequest request, @PathVariable Long currentPage){
+        TokenPayloadDto userInfo = (TokenPayloadDto) request.getAttribute("user");
+        PageIssueListDto pageIssueListDto = issueService.getPageUserIssueList(userInfo.getUserPk(), currentPage);
+        Result result = Result.builder().isSuccess(true)
+                .data(pageIssueListDto)
+                .message("Loaded IssueList")
+                .build();
+        return ResponseEntity.ok().body(result);
     }
 }
